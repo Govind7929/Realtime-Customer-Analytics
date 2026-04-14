@@ -1,0 +1,5 @@
+kafka-python
+pyspark
+clickhouse-connect
+faker
+boto3
