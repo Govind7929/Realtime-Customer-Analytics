@@ -106,3 +106,7 @@ __marimo__/
 
 # Project-specific
 plugins/
+
+# Spark / Streaming
+.ivy2/
+checkpoints/

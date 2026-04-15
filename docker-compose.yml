@@ -20,7 +20,7 @@ services:
       KAFKA_NUM_PARTITIONS: 3
 
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    image: ${CLICKHOUSE_IMAGE:-clickhouse/clickhouse-server:24.8}
     container_name: clickhouse
     ports:
       - "8123:8123"
@@ -35,7 +35,7 @@ services:
       - clickhouse_data:/var/lib/clickhouse
 
   minio:
-    image: minio/minio:latest
+    image: ${MINIO_IMAGE:-minio/minio:RELEASE.2024-10-29T16-01-48Z}
     container_name: minio
     ports:
       - "9001:9001"
@@ -48,15 +48,18 @@ services:
       - minio_data:/data
 
   metabase:
-    image: metabase/metabase:latest
+    image: ${METABASE_IMAGE:-metabase/metabase:v0.53.3}
     container_name: metabase
     ports:
       - "3000:3000"
     volumes:
       - ./plugins:/plugins
+      - metabase_data:/metabase-data
     environment:
       MB_PLUGINS_DIR: /plugins
+      MB_DB_FILE: /metabase-data/metabase.db
 
 volumes:
   clickhouse_data:
   minio_data:
+  metabase_data:

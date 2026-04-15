@@ -1,28 +1,34 @@
-from pyspark.sql import SparkSession
+import json
+import os
 
-spark = SparkSession.builder \
-    .appName("KafkaTest") \
-    .config(
-        "spark.jars.packages",
-        "org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.1"
-    ) \
-    .getOrCreate()
+from kafka import KafkaConsumer
 
-spark.sparkContext.setLogLevel("WARN")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "customer_events")
+KAFKA_GROUP_ID = os.getenv("KAFKA_GROUP_ID", "customer-events-printer")
 
-df = spark.readStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", "customer_events") \
-    .option("startingOffsets", "latest") \
-    .load()
 
-query = df.selectExpr("CAST(value AS STRING) AS value") \
-    .writeStream \
-    .format("console") \
-    .outputMode("append") \
-    .option("truncate", "false") \
-    .option("checkpointLocation", "checkpoints/test_kafka_stream") \
-    .start()
+def main():
+    consumer = KafkaConsumer(
+        KAFKA_TOPIC,
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+        api_version=(3, 9, 0),
+        group_id=KAFKA_GROUP_ID,
+        auto_offset_reset="earliest",
+        enable_auto_commit=True,
+        value_deserializer=lambda value: json.loads(value.decode("utf-8"))
+    )
 
-query.awaitTermination()
+    print(f"Listening to Kafka topic '{KAFKA_TOPIC}'...")
+
+    try:
+        for message in consumer:
+            print(message.value)
+    except KeyboardInterrupt:
+        print("\nKafka stream printer stopped by user.")
+    finally:
+        consumer.close()
+
+
+if __name__ == "__main__":
+    main()

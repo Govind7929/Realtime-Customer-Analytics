@@ -56,7 +56,7 @@ def generate_event():
     }
 
 
-if __name__ == "__main__":
+def main():
     producer = None
     try:
         producer = create_producer()
@@ -88,3 +88,7 @@ if __name__ == "__main__":
         if producer is not None:
             producer.flush()
             producer.close()
+
+
+if __name__ == "__main__":
+    main()
